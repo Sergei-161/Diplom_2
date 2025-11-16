@@ -12,16 +12,20 @@ class TestLoginUser:
     @allure.description('''
                         1. Отправляем запрос на создание пользователя;
                         2. Отправляем запрос на логин в системе;
-                        3. Проверяем ответ;
-                        4. Удаляем пользователя.
+                        3. Проверяем ответ.
                         ''')
     def test_login_user(self, create_new_user):
-        payload, create_response = create_new_user
-        # Проверяем, что пользователь создан успешно
-        assert create_response.status_code == StatusCode.OK and create_response.json().get("success") == True
+        payload, _ = create_new_user
+
         with allure.step("Отправить POST запрос для логина пользователя"):
-            login = requests.post(URL.main_url + Endpoints.LOGIN, data=payload)
-        assert login.status_code == StatusCode.OK and login.json().get("success") == True
+            login = requests.post(
+                URL.main_url + Endpoints.LOGIN,
+                data=payload,
+            )
+
+        with allure.step("Проверить ответ логина пользователя"):
+            assert login.status_code == StatusCode.OK
+            assert login.json().get("success") is True
 
     @allure.title('Проверка логин под несуществующим пользователем')
     @allure.description('''
@@ -30,5 +34,11 @@ class TestLoginUser:
                         ''')
     def test_login_under_none_user(self):
         with allure.step("Отправить POST запрос для логина несуществующего пользователя"):
-            login = requests.post(URL.main_url + Endpoints.LOGIN, data=Person.create_user_without_name())
-        assert login.status_code == StatusCode.UNAUTHORIZED and login.json().get("success") == False
+            login = requests.post(
+                URL.main_url + Endpoints.LOGIN,
+                data=Person.create_user_without_name(),
+            )
+
+        with allure.step("Проверить ответ логина несуществующего пользователя"):
+            assert login.status_code == StatusCode.UNAUTHORIZED
+            assert login.json().get("success") is False
